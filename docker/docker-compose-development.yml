@@ -1,0 +1,35 @@
+name: cafeapp-web
+services:
+  cafeapp-postgres:
+    image: postgres:15
+    container_name: cafeapp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cafeuser
+      POSTGRES_PASSWORD: cafepass
+      POSTGRES_DB: cafeapp
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  cafeapp-nextjs:
+    build:
+      context: ../nextjs
+      dockerfile: ../docker/Dockerfile
+    container_name: cafeapp-nextjs
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://cafeuser:cafepass@postgres:5433/cafeapp?schema=public
+      - NODE_ENV=development
+    depends_on:
+      - cafeapp-postgres
+    volumes:
+      - ../nextjs:/app
+      - /app/node_modules
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:
